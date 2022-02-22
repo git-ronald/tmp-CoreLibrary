@@ -42,7 +42,7 @@
             return value;
         }
 
-        public static int ForceParseToInt(this string? value) // TODO: rename to ParseToIntValue
+        public static int ParseToIntValue(this string? value)
         {
             if (value is null)
             {
@@ -59,7 +59,7 @@
             }
         }
 
-        public static string ForceToString(this object value) // TODO: rename to ToStringValue
+        public static string ToStringValue(this object value)
         {
             if (value == null)
             {
