@@ -1,4 +1,4 @@
-﻿namespace CoreLibrary.Helpers
+﻿namespace CoreLibrary
 {
     public enum DuplicateKeyPolicy
     {
