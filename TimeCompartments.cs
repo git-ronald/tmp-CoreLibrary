@@ -2,7 +2,6 @@
 {
     public enum TimeCompartments
     {
-        // The first 3 are only for debugging
         EveryMinute = 1,
         Every2Minutes = 2,
         Every3Minutes = 3,

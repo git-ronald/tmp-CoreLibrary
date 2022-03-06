@@ -5,15 +5,22 @@ namespace CoreLibrary.SchedulerService
 {
     /// <summary>
     /// Schedules tasks with consistent time compartments
-    /// TODO NOW:  move eryerthing to CoreLibrary, so LocalClient can use it.
     /// </summary>
-    public class SchedulerService : ISchedulerService
+    public class SchedulerService : SchedulerService<object>, ISchedulerService
     {
-        private readonly ISchedulerConfig<TimeSpan> _fixedTimeSchedule;
-        private readonly ISchedulerConfig<TimeCompartments> _timeCompartmentSchedule;
+        public SchedulerService(ISchedulerConfig<object, TimeSpan> fixedTimeSchedule, ISchedulerConfig<object, TimeCompartments> scheduleConfig) : base(fixedTimeSchedule, scheduleConfig)
+        {
+        }
+    }
+    public class SchedulerService<TState> : ISchedulerService<TState>
+    {
+        private readonly ISchedulerConfig<TState, TimeSpan> _fixedTimeSchedule;
+        private readonly ISchedulerConfig<TState, TimeCompartments> _timeCompartmentSchedule;
         private readonly Dictionary<TimeCompartments, DateTime> _nextCompartmentEvents;
 
-        public SchedulerService(ISchedulerConfig<TimeSpan> fixedTimeSchedule, ISchedulerConfig<TimeCompartments> scheduleConfig)
+        private TState? _state = default(TState);
+
+        public SchedulerService(ISchedulerConfig<TState, TimeSpan> fixedTimeSchedule, ISchedulerConfig<TState, TimeCompartments> scheduleConfig)
         {
             _fixedTimeSchedule = fixedTimeSchedule;
             _timeCompartmentSchedule = scheduleConfig;
@@ -21,10 +28,12 @@ namespace CoreLibrary.SchedulerService
             _nextCompartmentEvents = _timeCompartmentSchedule.Tasks.Keys.ToDictionary(tc => tc, _ => DateTime.MinValue);
         }
 
-        public async Task Start(CancellationToken stoppingToken)
+        public async Task Start(CancellationToken stoppingToken, TState? state = default(TState))
         {
             try
             {
+                _state = state;
+
                 while (true)
                 {
                     if (stoppingToken.IsCancellationRequested)
@@ -34,6 +43,10 @@ namespace CoreLibrary.SchedulerService
 
                     DateTime now = DateTime.UtcNow;
                     CalculateNextEventsForCompartiments(now);
+
+                    // TODO: fixed time events needs to have an "executed" flag.
+                    // Then the earliest not-executed events needs to be retrieved by GetNextEvent. This could produce a negative delay.
+                    // This way all fixed time events are guaranteed to be executed.
 
                     var (earliesDateTime, fixedTimeEvent) = GetNextEvent(now);
 
@@ -133,9 +146,9 @@ namespace CoreLibrary.SchedulerService
             await ExecuteTaskList(stoppingToken, tasksForCompartment);
         }
 
-        private async Task ExecuteTaskList(CancellationToken stoppingToken, IEnumerable<CancellableTaskDelegate> taskList)
+        private async Task ExecuteTaskList(CancellationToken stoppingToken, IEnumerable<ScheduledTaskDelegate<TState>> taskList)
         {
-            foreach (CancellableTaskDelegate execute in taskList)
+            foreach (ScheduledTaskDelegate<TState> execute in taskList)
             {
                 if (stoppingToken.IsCancellationRequested)
                 {
@@ -144,7 +157,7 @@ namespace CoreLibrary.SchedulerService
 
                 try
                 {
-                    await execute(stoppingToken);
+                    await execute(stoppingToken, _state);
                 }
                 catch (Exception ex)
                 {

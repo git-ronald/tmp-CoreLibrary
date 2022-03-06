@@ -1,7 +1,10 @@
 ﻿namespace CoreLibrary.SchedulerService
 {
-    public interface ISchedulerService
+    public interface ISchedulerService : ISchedulerService<object>
     {
-        Task Start(CancellationToken stoppingToken);
+    }
+    public interface ISchedulerService<TState>
+    {
+        Task Start(CancellationToken stoppingToken, TState? state = default(TState));
     }
 }
