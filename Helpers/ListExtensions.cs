@@ -108,6 +108,8 @@
         }
         // TODO: also implement TryLast
 
+        public static void AddItems<T>(this List<T> list, params T[] items) => list.AddRange(items);
+
         public static TValue? TryGetValue<TKey, TValue>(this Dictionary<TKey, TValue> source, TKey key) where TKey : notnull
         {
             if (source.TryGetValue(key, out TValue? value))
@@ -115,6 +117,22 @@
                 return value;
             }
             return default;
+        }
+
+        /// <summary>
+        /// If item doesn't exist, it's added automatically
+        /// </summary>
+        public static TValue Ensure<TKey, TValue>(this Dictionary<TKey, TValue> source, TKey key) where TKey : notnull where TValue : new()
+        {
+            return source.Ensure(key, () => new TValue());
+        }
+        public static TValue Ensure<TKey, TValue>(this Dictionary<TKey, TValue> source, TKey key, Func<TValue> create) where TKey : notnull
+        {
+            if (!source.ContainsKey(key))
+            {
+                source[key] = create();
+            }
+            return source[key];
         }
     }
 }
