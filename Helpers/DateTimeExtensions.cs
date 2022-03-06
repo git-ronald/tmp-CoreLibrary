@@ -2,16 +2,6 @@
 {
     public static class DateTimeExtensions
     {
-        /// <summary>
-        /// Difference with next moment, using given time compartments.
-        /// </summary>
-        public static TimeSpan CalcDeltaWithNextTimeCompartment(this DateTime start, int compartmentMinutes)
-        {
-            DateTime utcStart = start.ToUniversalTime();
-            DateTime nextMoment = utcStart.CalcNextNthMinute(compartmentMinutes);
-            return nextMoment - utcStart;
-        }
-
         public static TimeSpan CalcDeltaWithLastTimeCompartment(this DateTime start, int compartmentMinutes)
         {
             DateTime utcStart = start.ToUniversalTime();
