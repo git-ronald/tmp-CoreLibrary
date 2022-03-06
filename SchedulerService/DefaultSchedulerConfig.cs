@@ -1,8 +1,7 @@
 ﻿namespace CoreLibrary.SchedulerService
 {
-    public class DefaultSchedulerConfig<TKey> : ISchedulerConfig<TKey> where TKey : notnull
+    public class DefaultSchedulerConfig<TKey> : ISchedulerConfig<object, TKey> where TKey : notnull
     {
-        public static ISchedulerConfig<TKey> Create() => new DefaultSchedulerConfig<TKey>();
-        public Dictionary<TKey, List<CancellableTaskDelegate>> Tasks => new();
+        public Dictionary<TKey, List<ScheduledTaskDelegate<object>>> Tasks => new();
     }
 }

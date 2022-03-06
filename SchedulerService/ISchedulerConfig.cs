@@ -1,7 +1,7 @@
 ﻿namespace CoreLibrary.SchedulerService
 {
-    public interface ISchedulerConfig<TKey> where TKey : notnull
+    public interface ISchedulerConfig<TState, TKey> where TKey : notnull
     {
-        Dictionary<TKey, List<CancellableTaskDelegate>> Tasks { get; }
+        Dictionary<TKey, List<ScheduledTaskDelegate<TState>>> Tasks { get; }
     }
 }
