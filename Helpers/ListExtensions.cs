@@ -124,13 +124,9 @@
         /// </summary>
         public static TValue Ensure<TKey, TValue>(this Dictionary<TKey, TValue> source, TKey key) where TKey : notnull where TValue : new()
         {
-            return source.Ensure(key, () => new TValue());
-        }
-        public static TValue Ensure<TKey, TValue>(this Dictionary<TKey, TValue> source, TKey key, Func<TValue> create) where TKey : notnull
-        {
             if (!source.ContainsKey(key))
             {
-                source[key] = create();
+                source[key] = new TValue();
             }
             return source[key];
         }
