@@ -1,4 +1,5 @@
 ﻿using CoreLibrary.Helpers;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 
 namespace CoreLibrary.SchedulerService
@@ -6,33 +7,35 @@ namespace CoreLibrary.SchedulerService
     /// <summary>
     /// Schedules tasks with consistent time compartments
     /// </summary>
-    public class SchedulerService : SchedulerService<object>, ISchedulerService
+    public class SchedulerService : ISchedulerService
     {
-        public SchedulerService(ISchedulerConfig<object, TimeSpan> fixedTimeSchedule, ISchedulerConfig<object, TimeCompartments> scheduleConfig) : base(fixedTimeSchedule, scheduleConfig)
-        {
-        }
-    }
-    public class SchedulerService<TState> : ISchedulerService<TState>
-    {
-        private readonly ISchedulerConfig<TState, TimeSpan> _fixedTimeSchedule;
-        private readonly ISchedulerConfig<TState, TimeCompartments> _timeCompartmentSchedule;
-        private readonly Dictionary<TimeCompartments, DateTime> _nextCompartmentEvents;
+        private IDictionary<TimeSpan, SchedulerTaskList> _fixedTimeSchedule = new Dictionary<TimeSpan, SchedulerTaskList>();
+        private IDictionary<TimeCompartments, SchedulerTaskList> _compartmentSchedule = new Dictionary<TimeCompartments, SchedulerTaskList>();
 
-        private TState? _state = default(TState);
+        private Dictionary<TimeCompartments, DateTime> _nextCompartmentEvents = new();
 
-        public SchedulerService(ISchedulerConfig<TState, TimeSpan> fixedTimeSchedule, ISchedulerConfig<TState, TimeCompartments> scheduleConfig)
-        {
-            _fixedTimeSchedule = fixedTimeSchedule;
-            _timeCompartmentSchedule = scheduleConfig;
+        //private TState? _state = default(TState);
 
-            _nextCompartmentEvents = _timeCompartmentSchedule.Tasks.Keys.ToDictionary(tc => tc, _ => DateTime.MinValue);
-        }
+        //public SchedulerService(ISchedulerConfig<TState, TimeSpan> fixedTimeSchedule, ISchedulerConfig<TState, TimeCompartments> scheduleConfig)
+        //{
+        //    _fixedTimeSchedule = fixedTimeSchedule;
+        //    _timeCompartmentSchedule = scheduleConfig;
 
-        public async Task Start(CancellationToken stoppingToken, TState? state = default(TState))
+        //    _nextCompartmentEvents = _timeCompartmentSchedule.Tasks.Keys.ToDictionary(tc => tc, _ => DateTime.MinValue);
+        //}
+
+        public async Task Start(CancellationToken stoppingToken, IDictionary<TimeSpan, SchedulerTaskList>? fixedTimeSchedule = null, IDictionary<TimeCompartments, SchedulerTaskList>? compartmentSchedule = null) //, TState? state = default(TState))
         {
             try
             {
-                _state = state;
+                if (fixedTimeSchedule is not null)
+                {
+                    _fixedTimeSchedule = fixedTimeSchedule;
+                }
+                if (compartmentSchedule is not null)
+                {
+                    _compartmentSchedule = compartmentSchedule;
+                }
 
                 while (true)
                 {
@@ -42,17 +45,19 @@ namespace CoreLibrary.SchedulerService
                     }
 
                     DateTime now = DateTime.UtcNow;
-                    CalculateNextEventsForCompartiments(now);
+                    _nextCompartmentEvents = CalculateNextEventsForCompartiments(now);
+                    //_nextCompartmentEvents = _compartmentSchedule.Keys.ToDictionary(tc => tc, _ => DateTime.MinValue);
+
+                    //CalculateNextEventsForCompartiments(now);
 
                     // TODO: fixed time events needs to have an "executed" flag.
                     // Then the earliest not-executed events needs to be retrieved by GetNextEvent. This could produce a negative delay.
                     // This way all fixed time events are guaranteed to be executed.
 
                     var (earliesDateTime, fixedTimeEvent) = GetNextEvent(now);
-
                     if (!earliesDateTime.HasValue)
                     {
-                        break;
+                        break; // Absolutely nothing is scheduled so nvm...
                     }
 
                     int delay = (int)(earliesDateTime.Value - DateTime.UtcNow).TotalMilliseconds;
@@ -63,13 +68,21 @@ namespace CoreLibrary.SchedulerService
 
                     if (fixedTimeEvent.HasValue)
                     {
-                        await ExecuteTaskList(stoppingToken, _fixedTimeSchedule.Tasks[fixedTimeEvent.Value]);
+                        await ExecuteTaskList(stoppingToken, _fixedTimeSchedule[fixedTimeEvent.Value]);
                     }
 
-                    foreach (var compartment in _timeCompartmentSchedule.Tasks.Keys)
+                    foreach (var compartment in _compartmentSchedule.Keys)
                     {
                         await ExecuteTasksForCompartment(stoppingToken, compartment);
                     }
+                }
+            }
+            catch (TaskCanceledException ex)
+            {
+                // Usually it was just an awaited task being cancelled which is fine... unless ex.Task.Exception is not null:
+                if (ex.Task?.Exception is not null)
+                {
+                    // TODO: logging!
                 }
             }
             catch (Exception ex)
@@ -78,7 +91,19 @@ namespace CoreLibrary.SchedulerService
             }
         }
 
-        private void CalculateNextEventsForCompartiments(DateTime now)
+        private Dictionary<TimeCompartments, DateTime> CalculateNextEventsForCompartiments(DateTime now)
+        {
+            IEnumerable<KeyValuePair<TimeCompartments, DateTime>> GetNextEvents()
+            {
+                foreach (TimeCompartments compartment in _compartmentSchedule.Keys)
+                {
+                    yield return new KeyValuePair<TimeCompartments, DateTime>(compartment, now.CalcNextNthMinute((int)compartment));
+                }
+            }
+
+            return new Dictionary<TimeCompartments, DateTime>(GetNextEvents());
+        }
+        private void CalculateNextEventsForCompartimentsOLD(DateTime now)
         {
             foreach (TimeCompartments compartment in _nextCompartmentEvents.Keys)
             {
@@ -90,11 +115,17 @@ namespace CoreLibrary.SchedulerService
         {
             IEnumerable<(DateTime DateTime, TimeSpan? TimeSpan)> GetEarliestCandidates()
             {
-                var fixedTimeEvents = GetNextEventsForFixedTime(now).OrderBy(fte => fte.DateTime);
+                IEnumerable<(DateTime DateTime, TimeSpan TimeSpan)> fixedTimeEvents = _fixedTimeSchedule.Keys.Select(time => (now.Apply(time, 0), time));
 
                 if (fixedTimeEvents.Any())
                 {
-                    yield return fixedTimeEvents.First();
+                    //    Console.Write("### ");
+                    //    foreach (var item in fixedTimeEvents)
+                    //    {
+                    //        Console.Write($"{item.DateTime} {item.TimeSpan} - ");
+                    //    }
+                    //    Console.WriteLine(); 
+                    yield return fixedTimeEvents.OrderBy(e => e.DateTime).First();
                 }
 
                 if (_nextCompartmentEvents.Count > 0)
@@ -110,27 +141,28 @@ namespace CoreLibrary.SchedulerService
             }
 
             var earliestEvent = earliestCandidates.First();
+            //Console.WriteLine($"### Earliest next event: {earliestEvent.Key}");
             DateTime earliestDateTime = earliestEvent.Key;
             TimeSpan? fixedTimeEvent = earliestEvent.Select(e => e.TimeSpan).FirstOrDefault(ts => ts.HasValue);
 
             return (earliestDateTime, fixedTimeEvent);
         }
 
-        private IEnumerable<(DateTime DateTime, TimeSpan? TimeSpan)> GetNextEventsForFixedTime(DateTime now)
-        {
-            foreach (TimeSpan time in _fixedTimeSchedule.Tasks.Keys)
-            {
-                DateTime forToday = new DateTime(now.Year, now.Month, now.Day, time.Hours, time.Minutes, 0, DateTimeKind.Utc);
-                if (forToday > now)
-                {
-                    yield return (forToday, time);
-                }
-                else
-                {
-                    yield return (forToday.AddDays(1), time);
-                }
-            }
-        }
+        //private IEnumerable<(DateTime DateTime, TimeSpan? TimeSpan)> GetNextEventsForFixedTime(DateTime now)
+        //{
+        //    foreach (TimeSpan time in _fixedTimeConfig.Keys)
+        //    {
+        //        DateTime forToday = new DateTime(now.Year, now.Month, now.Day, time.Hours, time.Minutes, 0, DateTimeKind.Utc);
+        //        if (forToday > now)
+        //        {
+        //            yield return (forToday, time);
+        //        }
+        //        else
+        //        {
+        //            yield return (forToday.AddDays(1), time);
+        //        }
+        //    }
+        //}
 
         private async Task ExecuteTasksForCompartment(CancellationToken stoppingToken, TimeCompartments compartment)
         {
@@ -142,13 +174,13 @@ namespace CoreLibrary.SchedulerService
 
             _nextCompartmentEvents[compartment] = now.CalcNextNthMinute((int)compartment); // Schedule next event
 
-            var tasksForCompartment = _timeCompartmentSchedule.Tasks[compartment];
+            var tasksForCompartment = _compartmentSchedule[compartment];
             await ExecuteTaskList(stoppingToken, tasksForCompartment);
         }
 
-        private async Task ExecuteTaskList(CancellationToken stoppingToken, IEnumerable<ScheduledTaskDelegate<TState>> taskList)
+        private async Task ExecuteTaskList(CancellationToken stoppingToken, IEnumerable<Func<CancellationToken, Task>> taskList)
         {
-            foreach (ScheduledTaskDelegate<TState> execute in taskList)
+            foreach (Func<CancellationToken, Task> task in taskList)
             {
                 if (stoppingToken.IsCancellationRequested)
                 {
@@ -157,7 +189,7 @@ namespace CoreLibrary.SchedulerService
 
                 try
                 {
-                    await execute(stoppingToken, _state);
+                    await task(stoppingToken);
                 }
                 catch (Exception ex)
                 {

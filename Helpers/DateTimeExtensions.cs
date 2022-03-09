@@ -35,5 +35,15 @@
             int lastMinute = (utcStart.Minute / minutesInterval) * minutesInterval;
             return new DateTime(utcStart.Year, utcStart.Month, utcStart.Day, utcStart.Hour, lastMinute, 0, DateTimeKind.Utc);
         }
+
+        public static DateTime Apply(this DateTime date, TimeSpan time, int? seconds = null, bool alwaysInTheFuture = true)
+        {
+            DateTime result = new(date.Year, date.Month, date.Day, time.Hours, time.Minutes, seconds ?? time.Seconds, date.Kind);
+            if (alwaysInTheFuture && result <= date)
+            {
+                return result.AddDays(1);
+            }
+            return result;
+        }
     }
 }
