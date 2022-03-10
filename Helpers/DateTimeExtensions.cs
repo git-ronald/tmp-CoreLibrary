@@ -45,5 +45,29 @@
             }
             return result;
         }
+
+        public static TimeSpan FindEmptiestPositionWithinDay(this IEnumerable<TimeSpan> currentPositions)
+        {
+            var today = DateTime.Today; // Local time, not UTC! We need a time-frame between 00:00 and 00:00 next day, regardless of timezone or even date.
+            return currentPositions.Select(p => today.Apply(p)).FindEmptiestPositionInTimeFrame(today, today.AddDays(1)).TimeOfDay;
+        }
+
+        public static DateTime FindEmptiestPositionInTimeFrame(this IEnumerable<DateTime> currentPositions, DateTime start, DateTime end)
+        {
+            IEnumerable<(DateTime StartTime, TimeSpan TimeSpan)> GetTimeSpans()
+            {
+                var positions = currentPositions.Where(p => p >= start && p < end).Concat(new DateTime[] { start, end }).OrderBy(t => t).Skip(1);
+
+                DateTime previous = start;
+                foreach (DateTime current in positions)
+                {
+                    yield return (previous, (current - previous));
+                    previous = current;
+                }
+            }
+
+            var (startTime, timeSpan) = GetTimeSpans().MaxBy(x => x.TimeSpan); // Find biggest (== emptiest) time span
+            return startTime.AddMilliseconds(timeSpan.TotalMilliseconds / 2);
+        }
     }
 }
