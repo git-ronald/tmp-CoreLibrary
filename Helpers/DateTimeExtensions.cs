@@ -46,12 +46,10 @@
             return result;
         }
 
-        public static TimeSpan FindEmptiestPositionWithinDay(this IEnumerable<TimeSpan> currentPositions)
+        public static DateTime FindEmptiestPositionInTimeFrame(this IEnumerable<TimeSpan> currentPositions, DateTime start, DateTime end)
         {
-            var today = DateTime.Today; // Local time, not UTC! We need a time-frame between 00:00 and 00:00 next day, regardless of timezone or even date.
-            return currentPositions.Select(p => today.Apply(p)).FindEmptiestPositionInTimeFrame(today, today.AddDays(1)).TimeOfDay;
+            return currentPositions.Select(p => start.Apply(p)).FindEmptiestPositionInTimeFrame(start, end);
         }
-
         public static DateTime FindEmptiestPositionInTimeFrame(this IEnumerable<DateTime> currentPositions, DateTime start, DateTime end)
         {
             IEnumerable<(DateTime StartTime, TimeSpan TimeSpan)> GetTimeSpans()
