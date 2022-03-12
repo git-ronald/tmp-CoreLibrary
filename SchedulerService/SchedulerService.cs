@@ -14,16 +14,6 @@ namespace CoreLibrary.SchedulerService
 
         private Dictionary<TimeCompartments, DateTime> _nextCompartmentEvents = new();
 
-        //private TState? _state = default(TState);
-
-        //public SchedulerService(ISchedulerConfig<TState, TimeSpan> fixedTimeSchedule, ISchedulerConfig<TState, TimeCompartments> scheduleConfig)
-        //{
-        //    _fixedTimeSchedule = fixedTimeSchedule;
-        //    _timeCompartmentSchedule = scheduleConfig;
-
-        //    _nextCompartmentEvents = _timeCompartmentSchedule.Tasks.Keys.ToDictionary(tc => tc, _ => DateTime.MinValue);
-        //}
-
         public async Task Start(CancellationToken stoppingToken, IDictionary<TimeSpan, SchedulerTaskList>? fixedTimeSchedule = null, IDictionary<TimeCompartments, SchedulerTaskList>? compartmentSchedule = null) //, TState? state = default(TState))
         {
             try
@@ -119,12 +109,6 @@ namespace CoreLibrary.SchedulerService
 
                 if (fixedTimeEvents.Any())
                 {
-                    //    Console.Write("### ");
-                    //    foreach (var item in fixedTimeEvents)
-                    //    {
-                    //        Console.Write($"{item.DateTime} {item.TimeSpan} - ");
-                    //    }
-                    //    Console.WriteLine(); 
                     yield return fixedTimeEvents.OrderBy(e => e.DateTime).First();
                 }
 
