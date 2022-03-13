@@ -36,9 +36,6 @@ namespace CoreLibrary.SchedulerService
 
                     DateTime now = DateTime.UtcNow;
                     _nextCompartmentEvents = CalculateNextEventsForCompartiments(now);
-                    //_nextCompartmentEvents = _compartmentSchedule.Keys.ToDictionary(tc => tc, _ => DateTime.MinValue);
-
-                    //CalculateNextEventsForCompartiments(now);
 
                     // TODO: fixed time events needs to have an "executed" flag.
                     // Then the earliest not-executed events needs to be retrieved by GetNextEvent. This could produce a negative delay.
