@@ -93,20 +93,12 @@ namespace CoreLibrary.SchedulerService
 
             return new Dictionary<TimeCompartments, DateTime>(GetNextEvents());
         }
-        private void CalculateNextEventsForCompartimentsOLD(DateTime now)
-        {
-            foreach (TimeCompartments compartment in _nextCompartmentEvents.Keys)
-            {
-                _nextCompartmentEvents[compartment] = now.CalcNextNthMinute((int)compartment);
-            }
-        }
 
         private (DateTime?, TimeSpan?) GetNextEvent(DateTime now)
         {
             IEnumerable<(DateTime DateTime, TimeSpan? TimeSpan)> GetEarliestCandidates()
             {
                 IEnumerable<(DateTime DateTime, TimeSpan TimeSpan)> fixedTimeEvents = _fixedTimeSchedule.Keys.Select(time => (now.Apply(time, 0), time));
-
                 if (fixedTimeEvents.Any())
                 {
                     yield return fixedTimeEvents.OrderBy(e => e.DateTime).First();
@@ -125,28 +117,11 @@ namespace CoreLibrary.SchedulerService
             }
 
             var earliestEvent = earliestCandidates.First();
-            //Console.WriteLine($"### Earliest next event: {earliestEvent.Key}");
             DateTime earliestDateTime = earliestEvent.Key;
             TimeSpan? fixedTimeEvent = earliestEvent.Select(e => e.TimeSpan).FirstOrDefault(ts => ts.HasValue);
 
             return (earliestDateTime, fixedTimeEvent);
         }
-
-        //private IEnumerable<(DateTime DateTime, TimeSpan? TimeSpan)> GetNextEventsForFixedTime(DateTime now)
-        //{
-        //    foreach (TimeSpan time in _fixedTimeConfig.Keys)
-        //    {
-        //        DateTime forToday = new DateTime(now.Year, now.Month, now.Day, time.Hours, time.Minutes, 0, DateTimeKind.Utc);
-        //        if (forToday > now)
-        //        {
-        //            yield return (forToday, time);
-        //        }
-        //        else
-        //        {
-        //            yield return (forToday.AddDays(1), time);
-        //        }
-        //    }
-        //}
 
         private async Task ExecuteTasksForCompartment(CancellationToken stoppingToken, TimeCompartments compartment)
         {
