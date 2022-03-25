@@ -1,7 +1,12 @@
-﻿namespace CoreLibrary.Helpers
+﻿using CoreLibrary.ConstantValues;
+
+namespace CoreLibrary.Helpers
 {
     public static class DateTimeExtensions
     {
+        public static string ToStandardFormat(this DateTime value) => value.ToString(CoreConstants.StandardDateTimeFormat);
+        public static string ToStandardFormat(this DateTime? value) => value.HasValue ? value.Value.ToString(CoreConstants.StandardDateTimeFormat) : String.Empty;
+
         public static TimeSpan CalcDeltaWithLastTimeCompartment(this DateTime start, int compartmentMinutes)
         {
             DateTime utcStart = start.ToUniversalTime();
