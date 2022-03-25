@@ -67,9 +67,13 @@
         /// <summary>
         /// Convert IAsyncEnumerable to List.
         /// </summary>
-        public async static Task<List<T>> ConvertToListAsync<T>(this IAsyncEnumerable<T> source)
+        public async static Task<List<T>> ConvertToList<T>(this IAsyncEnumerable<T>? source)
         {
             var result = new List<T>();
+            if (source == null)
+            {
+                return result;
+            }
 
             await foreach (T item in source)
             {
@@ -79,16 +83,26 @@
             return result;
         }
 
-        public static async IAsyncEnumerable<T> ConvertToAsyncEnumerable<T>(this List<T> source)
+        public static async IAsyncEnumerable<T> ConvertToAsyncEnum<T>(this List<T>? source)
         {
+            if (source == null)
+            {
+                yield break;
+            }
+
             foreach (T item in source)
             {
                 yield return await Task.Run(() => item);
             }
         }
 
-        public async static IAsyncEnumerable<TResult> SelectAsAsyncEnumerable<TSource, TResult>(this IAsyncEnumerable<TSource> source, Func<TSource, TResult> selector)
+        public async static IAsyncEnumerable<TResult> SelectAsAsyncEnum<TSource, TResult>(this IAsyncEnumerable<TSource>? source, Func<TSource, TResult> selector)
         {
+            if (source == null)
+            {
+                yield break;
+            }
+
             await foreach (TSource sourceItem in source)
             {
                 yield return selector(sourceItem);

@@ -12,7 +12,7 @@
         }
         public static TValue GetOrThrow<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, Func<Exception> getException) where TKey : notnull
         {
-            if (dictionary is null)
+            if (dictionary == null)
             {
                 throw new ArgumentNullException(nameof(dictionary));
             }
@@ -30,7 +30,7 @@
 
         public static TValue GetOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue) where TKey : notnull
         {
-            if (dictionary is null)
+            if (dictionary == null)
             {
                 return defaultValue;
             }
@@ -44,7 +44,7 @@
 
         public static int ParseToIntValue(this string? value)
         {
-            if (value is null)
+            if (value == null)
             {
                 return default;
             }
