@@ -18,11 +18,11 @@ namespace CoreLibrary.SchedulerService
         {
             try
             {
-                if (fixedTimeSchedule is not null)
+                if (fixedTimeSchedule != null)
                 {
                     _fixedTimeSchedule = fixedTimeSchedule;
                 }
-                if (compartmentSchedule is not null)
+                if (compartmentSchedule != null)
                 {
                     _compartmentSchedule = compartmentSchedule;
                 }
@@ -66,8 +66,8 @@ namespace CoreLibrary.SchedulerService
             }
             catch (TaskCanceledException ex)
             {
-                // Usually it was just an awaited task being cancelled which is fine... unless ex.Task.Exception is not null:
-                if (ex.Task?.Exception is not null)
+                // Usually it was just an awaited task being cancelled which is fine... unless ex.Task.Exception != null:
+                if (ex.Task?.Exception != null)
                 {
                     // TODO: logging!
                 }
