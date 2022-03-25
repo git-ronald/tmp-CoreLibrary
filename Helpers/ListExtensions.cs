@@ -70,7 +70,7 @@
         public async static Task<List<T>> ConvertToList<T>(this IAsyncEnumerable<T>? source)
         {
             var result = new List<T>();
-            if (source is null)
+            if (source == null)
             {
                 return result;
             }
@@ -85,7 +85,7 @@
 
         public static async IAsyncEnumerable<T> ConvertToAsyncEnum<T>(this List<T>? source)
         {
-            if (source is null)
+            if (source == null)
             {
                 yield break;
             }
@@ -98,7 +98,7 @@
 
         public async static IAsyncEnumerable<TResult> SelectAsAsyncEnum<TSource, TResult>(this IAsyncEnumerable<TSource>? source, Func<TSource, TResult> selector)
         {
-            if (source is null)
+            if (source == null)
             {
                 yield break;
             }

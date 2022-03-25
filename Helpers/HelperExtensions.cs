@@ -4,7 +4,7 @@
     {
         public static Task InvokeHandlers(this AsyncEventHandlers.EmptyAsyncHandler? handler)
         {
-            if (handler is null)
+            if (handler == null)
             {
                 return Task.CompletedTask;
             }
@@ -12,7 +12,7 @@
         }
         public static Task InvokeHAndlers<T>(this AsyncEventHandlers.ArgAsyncHandler<T>? handler, T arg)
         {
-            if (handler is null)
+            if (handler == null)
             {
                 return Task.CompletedTask;
             }
