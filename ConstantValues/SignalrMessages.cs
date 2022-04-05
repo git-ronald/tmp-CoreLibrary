@@ -7,6 +7,7 @@
 
         public const string RequestPeerRegistrationInfo = nameof(RequestPeerRegistrationInfo);
         public const string PeerRegistrationInfoResponse = nameof(PeerRegistrationInfoResponse);
+        public const string PeerRegistrationConfirmed = nameof(PeerRegistrationConfirmed);
 
         public const string RegistrationUpdate = nameof(RegistrationUpdate);
         public const string NotifySignOfLife = nameof(NotifySignOfLife);
