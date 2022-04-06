@@ -1,22 +1,16 @@
-﻿namespace CoreLibrary.Helpers
+﻿using CoreLibrary.Delegates;
+
+namespace CoreLibrary.Helpers
 {
     public static class HelperExtensions
     {
-        public static Task InvokeHandlers(this AsyncEventHandlers.EmptyAsyncHandler? handler)
+        public static Task InvokeHandlers(this EmptyAsyncHandler? handler)
         {
             if (handler == null)
             {
                 return Task.CompletedTask;
             }
             return handler.Invoke();
-        }
-        public static Task InvokeHAndlers<T>(this AsyncEventHandlers.ArgAsyncHandler<T>? handler, T arg)
-        {
-            if (handler == null)
-            {
-                return Task.CompletedTask;
-            }
-            return handler.Invoke(arg);
         }
     }
 }
