@@ -2,15 +2,15 @@
 {
     public static class NullableExtensions
     {
-        public static TValue GetOrThrow<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key) where TKey : notnull
+        public static TValue GetOrFail<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key) where TKey : notnull
         {
-            return dictionary.GetOrThrow(key, $"Failed to read key {key}");
+            return dictionary.GetOrFail(key, $"Failed to read key {key}");
         }
-        public static TValue GetOrThrow<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, string exceptionMessage) where TKey : notnull
+        public static TValue GetOrFail<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, string exceptionMessage) where TKey : notnull
         {
-            return dictionary.GetOrThrow(key, () => new Exception(exceptionMessage));
+            return dictionary.GetOrFail(key, () => new Exception(exceptionMessage));
         }
-        public static TValue GetOrThrow<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, Func<Exception> getException) where TKey : notnull
+        public static TValue GetOrFail<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, Func<Exception> getException) where TKey : notnull
         {
             if (dictionary == null)
             {
@@ -66,6 +66,16 @@
                 return string.Empty;
             }
             return value.ToString() ?? string.Empty;
+        }
+
+        public static object CreateOrFail(this Type type)
+        {
+            object? result = Activator.CreateInstance(type);
+            if (result == null)
+            {
+                throw new Exception($"Could not instantiate {type.Name}");
+            }
+            return result;
         }
     }
 }
