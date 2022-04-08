@@ -1,4 +1,4 @@
-﻿namespace CoreLibrary.PeerInterface
+﻿namespace CoreLibrary.Models
 {
     public class PeerRegistrationInfo
     {
