@@ -14,5 +14,6 @@
 
         public const string PeerRequest = nameof(PeerRequest);
         public const string PeerResponse = nameof(PeerResponse);
+        public const string PeerError = nameof(PeerError);
     }
 }
