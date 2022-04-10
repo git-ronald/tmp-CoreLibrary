@@ -144,5 +144,14 @@
             }
             return source[key];
         }
+
+        public static Dictionary<TKey, TValue> ConcatDictionary<TKey, TValue>(this Dictionary<TKey, TValue> existing, Dictionary<TKey, TValue> toAdd) where TKey : notnull
+        {
+            foreach (var key in toAdd.Keys)
+            {
+                existing[key] = toAdd[key];
+            }
+            return existing;
+        }
     }
 }
