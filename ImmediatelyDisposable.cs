@@ -1,5 +1,7 @@
 ﻿namespace CoreLibrary
 {
+    // TODO: enable return value (perhaps generic out variable for Execute)
+    // This way HubClient can indicate restart
     public abstract class ImmediatelyDisposable : IImmediatelyDisposable
     {
         public async Task ExecuteDispose()
